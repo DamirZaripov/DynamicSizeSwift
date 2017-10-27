@@ -8,8 +8,20 @@
 
 import UIKit
 
-class NewViewController: UITableViewController, UICollectionViewDelegate, UICollectionViewDataSource, DataTransferProtocol {
+enum InfoType {
+    case friends
+    case followers
+    case groups
+    case photos
+    case videos
+    case audios
+    case gifts
+    case docs
+    
+}
 
+class NewViewController: UITableViewController, DataTransferProtocol, UICollectionViewDelegate, UICollectionViewDataSource {
+  
     //MARK: - Declaring variables
     
     @IBOutlet weak var avatarImageView: UIImageView!
@@ -18,21 +30,16 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
     @IBOutlet weak var surnameLabel: UILabel!
     @IBOutlet weak var ageLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
-    @IBOutlet weak var numberOfFriendButton: UIButton!
-    @IBOutlet weak var numberOfFollowersButton: UIButton!
-    @IBOutlet weak var numberOfGroupsButton: UIButton!
-    @IBOutlet weak var numberOfPhotoButton: UIButton!
-    @IBOutlet weak var numberOfAudioButton: UIButton!
-    @IBOutlet weak var numberOfVideoButton: UIButton!
     @IBOutlet weak var addEntryButton: UIButton!
     @IBOutlet weak var addPhotoButton: UIButton!
     @IBOutlet weak var addPlaceButton: UIButton!
-    @IBOutlet weak var infoScrollView: UIScrollView!
-    
+    @IBOutlet weak var infoCollectionView: UICollectionView!
+    @IBOutlet weak var photoCollectionView: UICollectionView!
     var user: User!
-    var imagesArray = [UIImage(named: "fcrk-1"),UIImage(named: "fcrk-2"),UIImage(named: "fcrk-3"), UIImage(named: "fcrk-1")]
+    var photoArray = [UIImage(named: "fcrk-1"),UIImage(named: "fcrk-2"),UIImage(named: "fcrk-3"), UIImage(named: "fcrk-1"), UIImage(named: "fcrk-1"),UIImage(named: "fcrk-2"),UIImage(named: "fcrk-3"), UIImage(named: "fcrk-1")]
     var news = [News]()
     let newsTestImageArray = [UIImage(named: "fcrk-4")!, UIImage(named: "fcrk-5")!, UIImage(named: "fcrk-6")!]
+    let types: [InfoType] = [.friends, .followers, .groups, .photos, .videos, .audios, .gifts, .docs]
     
     //MARK: - Constants
     
@@ -52,10 +59,12 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
     let newsTestDateArray = ["15 авг в 20:08", "15 авг в 20:15", "15 сент в 20:28", "18 дек в 20:11"]
     let newsCellIdentifier = "newsIdentifier"
     let cellNewsIdentifier = "cellNewsIdentifier"
+    let cellInfoIdentifier = "infoCollectionCellIdentifier"
+    let cellPhotoIdentifier = "identifierPhotoCollectionViewCell"
     let newsCellHeight: CGFloat = 290
     let newsSequeIdentifier = "createNewsIdentifier"
-    let imageCollectionCellIdentifier = "ImageCollectionViewCell"
-    let newsCellClassi = "NewsTableViewCell"
+    let newsCellClass = "NewsTableViewCell"
+    let estimatedNewsCellHeight: CGFloat = 100
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,21 +75,26 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
         changeBorder(for: addPhotoButton)
         changeBorder(for: addEntryButton)
         changeBorder(for: addPlaceButton)
-        infoScrollView.contentSize = CGSize(width: scrollWidth, height: infoScrollView.frame.size.height)
-        changeBorder(for: infoScrollView)
         cellRegistration()
         randomTestNews()
+        prepareForDynamicCellSize()
+    }
+    
+    func prepareForDynamicCellSize() {
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = estimatedNewsCellHeight
     }
     
     //MARK: - Test methods
     func randomTestNews() {
-        let testNews1 = News(name: nameLabel.text!, surname: surnameLabel.text!, date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))], text: newsTestTextArray[0], image: newsTestImageArray[0], numberOfLikes: newsTestLikesArray[0], numberOfComments: newsTestCommentsArray[0], numberOfReposts: newsTestRepostsArray[0], avatar: user.avatar )
-        let testNews2 = News(name: nameLabel.text!, surname: surnameLabel.text!, date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))], text: newsTestTextArray[1], image: newsTestImageArray[1], numberOfLikes: newsTestLikesArray[1], numberOfComments: newsTestCommentsArray[1], numberOfReposts: newsTestRepostsArray[1], avatar: user.avatar )
+        let testNews1 = News(name: nameLabel.text!, surname: surnameLabel.text!, date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))], text: "", image: newsTestImageArray[0], numberOfLikes: newsTestLikesArray[0], numberOfComments: newsTestCommentsArray[0], numberOfReposts: newsTestRepostsArray[0], avatar: user.avatar )
+        let testNews2 = News(name: nameLabel.text!, surname: surnameLabel.text!, date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))], text: newsTestTextArray[1], image: nil, numberOfLikes: newsTestLikesArray[1], numberOfComments: newsTestCommentsArray[1], numberOfReposts: newsTestRepostsArray[1], avatar: user.avatar )
         let testNews3 = News(name: nameLabel.text!, surname: surnameLabel.text!, date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))], text: newsTestTextArray[2], image: newsTestImageArray[2], numberOfLikes: newsTestLikesArray[2], numberOfComments: newsTestCommentsArray[2], numberOfReposts: newsTestRepostsArray[2], avatar: user.avatar )
         
         news.append(testNews1)
         news.append(testNews2)
         news.append(testNews3)
+        tableView.reloadData()
     }
     
     //MARK: - My methods
@@ -116,8 +130,14 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
     //MARK: - Cells Registration
     
     func cellRegistration() {
-        let newsCellNib = UINib(nibName: newsCellClassi, bundle: nil)
+        let newsCellNib = UINib(nibName: newsCellClass, bundle: nil)
         tableView.register(newsCellNib, forCellReuseIdentifier: cellNewsIdentifier)
+        
+        let infoCollectionViewCellNib = UINib(nibName: "InfoCollectionViewCell", bundle: nil)
+        infoCollectionView.register(infoCollectionViewCellNib, forCellWithReuseIdentifier: cellInfoIdentifier)
+        
+        let photoCollectionViewCellNib = UINib(nibName: "PhotoCollectionViewCell", bundle: nil)
+        photoCollectionView.register(photoCollectionViewCellNib, forCellWithReuseIdentifier: cellPhotoIdentifier)
     }
     
     //MARK: - Table View Methods
@@ -137,11 +157,7 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
         cell.prepare(with: newsModel)
         return cell
     }
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return newsCellHeight
-    }
-    
+        
     //MARK: - Methods associated with Navigation Bar
     
     @IBAction func threeDotButton(_ sender: Any) {
@@ -155,6 +171,7 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
     }
     
     func didPressDone(with note: String) {
+   
         let testNews = News(name: nameLabel.text!, surname: surnameLabel.text!,
                             date: newsTestDateArray[Int(arc4random_uniform(UInt32(newsTestDateArray.count)))],
                             text: note,
@@ -170,23 +187,53 @@ class NewViewController: UITableViewController, UICollectionViewDelegate, UIColl
     //MARK: - Collection View Methods
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return imagesArray.count
+
+        if collectionView == infoCollectionView {
+            return types.count
+        }
+        
+        if collectionView == photoCollectionView {
+            return photoArray.count
+        }
+        
+        return 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: imageCollectionCellIdentifier, for: indexPath) as! ImageCollectionViewCell
+
+        if collectionView == infoCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier:  cellInfoIdentifier, for: indexPath) as! InfoCollectionViewCell
+            cell.prepareCell(with: types[indexPath.row])
+
+            return cell
+        }
         
-        cell.photoImageView.image = imagesArray[indexPath.row]
-        return cell
+        if collectionView == photoCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellPhotoIdentifier, for: indexPath) as! PhotoCollectionViewCell
+            cell.prepareCell(with: photoArray[indexPath.row]!)
+            
+            return cell
+        }
+        
+        return UICollectionViewCell()
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if indexPath.row == types.index(of: .followers) {
+            performSegue(withIdentifier: followersSegueIdentifier, sender: nil)
+        }
     }
   
     // MARK: - Prepare methods
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    
         if segue.identifier == followersSegueIdentifier {
             let followersVC = segue.destination as! FollowersTableViewController
             followersVC.followers = user.followers
         }
+        
         if segue.identifier == ownInfoSegueIdentifier {
             let ownInfoVC = segue.destination as! OwnInfoTableViewController
             ownInfoVC.nameUser = user.name

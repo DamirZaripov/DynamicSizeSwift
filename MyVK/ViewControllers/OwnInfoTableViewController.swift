@@ -46,6 +46,7 @@ class OwnInfoTableViewController: UITableViewController {
     let filesInfoCountArray = [["12", "43", "42"],
                               ["13", "49", "76"],
                               ["43", "97", "22"]]
+    let presents = [UIImage(named: "present-1")!, UIImage(named: "present-2")!, UIImage(named: "present-3")!, UIImage(named: "present-1")!, UIImage(named: "present-2")!, UIImage(named: "present-3")!]
     let basicInfoCellHeight: CGFloat = 50
     let contactsCellHeight: CGFloat = 40
     let carierCellHeight: CGFloat = 80
@@ -118,6 +119,7 @@ class OwnInfoTableViewController: UITableViewController {
         tableView.register(presentsCellNib, forCellReuseIdentifier: presentsCellIdentifier)
         let filesCellNib = UINib(nibName: "FilesTableViewCell", bundle: nil)
         tableView.register(filesCellNib, forCellReuseIdentifier: filesCellIdentifier)
+        
     }
     
     func setupRefreshControl() {
@@ -221,6 +223,7 @@ class OwnInfoTableViewController: UITableViewController {
         case .presents:
             let cell = tableView.dequeueReusableCell(withIdentifier: presentsCellIdentifier, for: indexPath) as! PresentsTableViewCell
             cell.prepareCell(with: item as! InfoViewModelPresentsItem)
+            cell.presents = presents
             return cell
         case .files:
             let cell = tableView.dequeueReusableCell(withIdentifier: filesCellIdentifier, for: indexPath) as! FilesTableViewCell
